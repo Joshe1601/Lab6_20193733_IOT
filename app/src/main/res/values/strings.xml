@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">lab6_20193733</string>
+    <string name="facebook_app_id">1491441668431065</string>
+    <string name="fb_login_protocol_scheme">fb1491441668431065</string>
+    <string name="facebook_client_token">bcceef11991d847f96a377e3403509d5</string>
+
+
 </resources>

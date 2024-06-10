@@ -12,9 +12,19 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.facebook.AccessToken;
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.FacebookSdk;
+import com.facebook.appevents.AppEventsLogger;
+import com.facebook.login.LoginResult;
+import com.facebook.login.widget.LoginButton;
 import com.firebase.ui.auth.AuthMethodPickerLayout;
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract;
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.mptechprojects.lab6_20193733.MainActivity;
@@ -26,12 +36,17 @@ import java.util.Arrays;
 public class LoginActivity extends AppCompatActivity {
 
     ActivityLoginBinding binding;
-
+    CallbackManager mCallbackManager;
+    FirebaseAuth firebaseAuth;
     private final static String TAG = "msg-test";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        FacebookSdk.sdkInitialize(getApplicationContext());
+        AppEventsLogger.activateApp(getApplication());
+
         binding = ActivityLoginBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
@@ -67,8 +82,40 @@ public class LoginActivity extends AppCompatActivity {
                     .build();
 
             signInLauncher.launch(intent);
+
+            mCallbackManager = CallbackManager.Factory.create();
+            LoginButton loginButton = findViewById(R.id.login_button_facebook);
+            loginButton.setReadPermissions("email", "public_profile");
+            loginButton.registerCallback(mCallbackManager, new FacebookCallback<LoginResult>() {
+                @Override
+                public void onSuccess(LoginResult loginResult) {
+                    Log.d(TAG, "facebook:onSuccess:" + loginResult);
+
+                    handleFacebookAccessToken(loginResult.getAccessToken());
+                }
+
+                @Override
+                public void onCancel() {
+                    Log.d(TAG, "facebook:onCancel");
+                }
+
+                @Override
+                public void onError(FacebookException error) {
+                    Log.d(TAG, "facebook:onError", error);
+                }
+            });
+
         });
+
+
     }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        mCallbackManager.onActivityResult(requestCode, resultCode, data);
+    }
+
 
     /* launchers tienen 2 partes {
         1: contrato,
@@ -79,7 +126,7 @@ public class LoginActivity extends AppCompatActivity {
             new FirebaseAuthUIActivityResultContract(),
             result -> {
                 if (result.getResultCode() == RESULT_OK) {
-                    FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
+                    firebaseAuth = FirebaseAuth.getInstance();
 
                     FirebaseUser user = firebaseAuth.getCurrentUser();
                     if (user != null) {
@@ -113,4 +160,24 @@ public class LoginActivity extends AppCompatActivity {
         startActivity(intent);
         finish();
     }
+
+    private void handleFacebookAccessToken(AccessToken token) {
+        Log.d(TAG, "handleFacebookAccessToken:" + token);
+
+        AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
+        firebaseAuth.signInWithCredential(credential)
+                .addOnCompleteListener(this, task -> {
+                    if (task.isSuccessful()) {
+                        Log.d(TAG, "signInWithCredential:success");
+                        FirebaseUser user = firebaseAuth.getCurrentUser();
+                        goToMainActivity();
+                    } else {
+                        Log.w(TAG, "signInWithCredential:failure", task.getException());
+                        Toast.makeText(LoginActivity.this, "Authentication failed.",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+
 }

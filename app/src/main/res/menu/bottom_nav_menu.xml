@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/navigation_ingresos"
+        android:icon="@drawable/baseline_monetization_on_24"
+        android:title="Ingresos" />
+
+    <item
+        android:id="@+id/navigation_egresos"
+        android:icon="@drawable/baseline_money_off_24"
+        android:title="Egresos" />
+
+    <item
+        android:id="@+id/navigation_resumen"
+        android:icon="@drawable/baseline_dashboard_24"
+        android:title="Resumen" />
+
+    <item
+        android:id="@+id/navigation_logout"
+        android:icon="@drawable/baseline_logout_24"
+        android:title="Cerrar Sesión" />
+
+</menu>
