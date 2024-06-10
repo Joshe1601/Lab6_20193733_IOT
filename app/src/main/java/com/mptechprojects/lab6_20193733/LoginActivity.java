@@ -51,25 +51,48 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
-
         FirebaseUser currentUser = firebaseAuth.getCurrentUser();
-        if (currentUser != null) { //user logged-in
-            if (currentUser.isEmailVerified()) {
-                Log.d(TAG, "Firebase uid: " + currentUser.getUid());
-                goToMainActivity();
-            }
+        if (currentUser != null && currentUser.isEmailVerified()) {
+            Log.d(TAG, "Firebase uid: " + currentUser.getUid());
+            goToMainActivity();
+        }
+
+        mCallbackManager = CallbackManager.Factory.create();
+        LoginButton loginButton = findViewById(R.id.login_button_facebook);
+        if (loginButton != null) {
+            loginButton.setReadPermissions("email", "public_profile");
+            loginButton.registerCallback(mCallbackManager, new FacebookCallback<LoginResult>() {
+                @Override
+                public void onSuccess(LoginResult loginResult) {
+                    Log.d(TAG, "facebook:onSuccess:" + loginResult);
+                    handleFacebookAccessToken(loginResult.getAccessToken());
+                }
+
+                @Override
+                public void onCancel() {
+                    Log.d(TAG, "facebook:onCancel");
+                }
+
+                @Override
+                public void onError(FacebookException error) {
+                    Log.d(TAG, "facebook:onError", error);
+                }
+            });
+        } else {
+            Log.e(TAG, "LoginButton no encontrado en el layout.");
         }
 
         binding.loginBtn.setOnClickListener(view -> {
 
             binding.loginBtn.setEnabled(false);
 
+            mCallbackManager = CallbackManager.Factory.create();
+
             AuthMethodPickerLayout authMethodPickerLayout = new AuthMethodPickerLayout.Builder(R.layout.custom_login)
                     .setGoogleButtonId(R.id.btn_login_google)
                     .setEmailButtonId(R.id.btn_login_mail)
                     .build();
 
-            //no hay sesión
             Intent intent = AuthUI.getInstance()
                     .createSignInIntentBuilder()
                     .setIsSmartLockEnabled(false)
@@ -82,10 +105,6 @@ public class LoginActivity extends AppCompatActivity {
                     .build();
 
             signInLauncher.launch(intent);
-
-            mCallbackManager = CallbackManager.Factory.create();
-            LoginButton loginButton = findViewById(R.id.login_button_facebook);
-            loginButton.setReadPermissions("email", "public_profile");
             loginButton.registerCallback(mCallbackManager, new FacebookCallback<LoginResult>() {
                 @Override
                 public void onSuccess(LoginResult loginResult) {
@@ -107,14 +126,14 @@ public class LoginActivity extends AppCompatActivity {
 
         });
 
-
     }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
         mCallbackManager.onActivityResult(requestCode, resultCode, data);
     }
+
 
 
     /* launchers tienen 2 partes {

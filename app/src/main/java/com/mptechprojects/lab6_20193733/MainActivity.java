@@ -27,33 +27,21 @@ public class MainActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+
 
         NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment_activity_main);
         NavController navController = navHostFragment.getNavController();
         NavigationUI.setupWithNavController(binding.navView, navController);
 
-        binding.navView.setOnNavigationItemSelectedListener(item -> {
-            int id = item.getItemId();
-            if (id == R.id.navigation_logout) {
-                AuthUI.getInstance().signOut(this)
-                        .addOnCompleteListener(task -> {
-                            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-                            startActivity(intent);
-                            finish();
-                        });
-                return true;
-            } else {
-                return NavigationUI.onNavDestinationSelected(item, navController);
-            }
+        binding.logoutBtn.setOnClickListener(v -> {
+            AuthUI.getInstance()
+                    .signOut(this)
+                    .addOnCompleteListener(task -> {
+                        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                        startActivity(intent);
+                        finish();
+                    });
         });
-
-
-
 
     }
 }
